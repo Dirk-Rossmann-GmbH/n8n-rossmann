@@ -22,6 +22,21 @@ Complete guide for running n8n workflow automation with Rossmann self-signed cer
 
 ## 🚀 Quick Start
 
+### 0. Configure Environment Variables
+
+Copy the example environment file and fill in your credentials:
+
+```bash
+# Copy the template
+cp .env.example .env
+
+# Edit .env and set:
+# - POSTGRES_PASSWORD (strong password for database)
+# - N8N_ENCRYPTION_KEY (generate with: openssl rand -base64 32)
+```
+
+**⚠️ WICHTIG:** Die `.env` Datei enthält sensible Daten und wird NICHT ins Git committed!
+
 ### 1. Build the Custom n8n Image (one time)
 
 ```bash
@@ -168,6 +183,40 @@ Environment variables in `docker-compose.rossmann.yml`:
 - `REQUESTS_CA_BUNDLE` - Python requests library
 - `NODE_OPTIONS` - OpenSSL CA support
 - `npm_config_cafile` - npm/pnpm package manager
+
+### Security: Environment Variables
+
+**Sensitive data (passwords, keys) are managed via `.env` file:**
+
+The `docker-compose.rossmann.yml` uses environment variables instead of hardcoded credentials:
+
+```yaml
+POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Please set POSTGRES_PASSWORD in .env file}
+N8N_ENCRYPTION_KEY: ${N8N_ENCRYPTION_KEY:?Please set N8N_ENCRYPTION_KEY in .env file}
+```
+
+**How it works:**
+1. Docker Compose automatically reads `.env` file from the same directory
+2. Variables with `:?` are **required** - Docker stops if missing
+3. Variables with `:-default` are **optional** - use default if not set
+4. `.env` file is in `.gitignore` - never committed to Git!
+
+**Variable syntax:**
+- `${VAR:?error message}` - Required, shows error if missing
+- `${VAR:-default}` - Optional, uses default value if missing
+- `${VAR}` - Simple replacement
+
+**Example `.env` file:**
+```env
+POSTGRES_PASSWORD=MeinSicheresPasswort123!
+N8N_ENCRYPTION_KEY=xy8fh3kd9s2jf8dh3ks9dj2f8dh3ks9d
+```
+
+**Benefits:**
+- ✅ No passwords in Git repository
+- ✅ Different credentials per environment (dev/test/prod)
+- ✅ Team members use their own passwords
+- ✅ Required fields enforced at startup
 
 ---
 
