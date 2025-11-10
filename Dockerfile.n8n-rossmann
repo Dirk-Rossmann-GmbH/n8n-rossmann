@@ -1,0 +1,17 @@
+# Start with the official pre-built n8n image
+FROM docker.n8n.io/n8nio/n8n:latest
+
+USER root
+
+# Copy and install self-signed certificates for corporate network
+COPY .cert/*.crt /usr/local/share/ca-certificates/
+RUN cat /usr/local/share/ca-certificates/*.crt >> /etc/ssl/certs/ca-certificates.crt && \
+    update-ca-certificates
+
+# Set environment variables for certificate handling
+ENV NODE_EXTRA_CA_CERTS=/etc/ssl/certs/ca-certificates.crt \
+    SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt \
+    REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt \
+    NODE_OPTIONS=--use-openssl-ca
+
+USER node

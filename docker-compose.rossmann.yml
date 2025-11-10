@@ -1,0 +1,62 @@
+version: '3.8'
+
+# Persistent data volumes
+volumes:
+  n8n-data:
+  postgres-data:
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: n8n
+      POSTGRES_USER: n8n
+      POSTGRES_PASSWORD: password
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U n8n"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # n8n Application
+  n8n:
+    image: n8n-rossmann
+    restart: unless-stopped
+    ports:
+      - "5678:5678"
+    volumes:
+      # n8n data (workflows, credentials, etc.)
+      - n8n-data:/home/node/.n8n
+    environment:
+      # Database configuration
+      DB_TYPE: postgresdb
+      DB_POSTGRESDB_HOST: postgres
+      DB_POSTGRESDB_DATABASE: n8n
+      DB_POSTGRESDB_USER: n8n
+      DB_POSTGRESDB_PASSWORD: password
+      
+      # n8n configuration
+      N8N_HOST: localhost
+      N8N_PORT: 5678
+      N8N_PROTOCOL: http
+      WEBHOOK_URL: http://localhost:5678/
+      
+      # Rossmann certificate configuration
+      NODE_EXTRA_CA_CERTS: /etc/ssl/certs/ca-certificates.crt
+      SSL_CERT_FILE: /etc/ssl/certs/ca-certificates.crt
+      REQUESTS_CA_BUNDLE: /etc/ssl/certs/ca-certificates.crt
+      NODE_OPTIONS: --use-openssl-ca
+      npm_config_cafile: /etc/ssl/certs/ca-certificates.crt
+      
+      # Optional: Timezone
+      GENERIC_TIMEZONE: Europe/Berlin
+      TZ: Europe/Berlin
+    
+    depends_on:
+      postgres:
+        condition: service_healthy
+
