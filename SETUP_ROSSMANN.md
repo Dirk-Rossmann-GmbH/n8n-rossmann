@@ -35,7 +35,7 @@ cp .env.example .env
 # - N8N_ENCRYPTION_KEY (generate with: openssl rand -base64 32)
 ```
 
-**⚠️ WICHTIG:** Die `.env` Datei enthält sensible Daten und wird NICHT ins Git committed!
+**⚠️ IMPORTANT:** The `.env` file contains sensitive data and is NOT committed to Git!
 
 ### 1. Build the Custom n8n Image (one time)
 
